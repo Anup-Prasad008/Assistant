@@ -10,7 +10,8 @@ export function resetBunnySession() {
 
 export async function getBunnyResponse(prompt: string, history: { sender: "user" | "bunny", text: string }[] = []): Promise<string> {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || (process as any).env?.GEMINI_API_KEY;
+    const ai = new GoogleGenAI({ apiKey: apiKey || "" });
     
     if (!chatSession) {
       // SLIDING WINDOW MEMORY: Keep only the last 20 messages to prevent "buffer full" (context window overflow)
@@ -59,7 +60,8 @@ export async function getBunnyResponse(prompt: string, history: { sender: "user"
 
 export async function getBunnyAudio(text: string): Promise<string | null> {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || (process as any).env?.GEMINI_API_KEY;
+    const ai = new GoogleGenAI({ apiKey: apiKey || "" });
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text }] }],

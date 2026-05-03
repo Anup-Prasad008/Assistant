@@ -29,30 +29,31 @@ export class LiveSessionManager {
   }
 
   private refreshProvider() {
-    // Try to get keys from various sources safely
-    const getEnv = (key: string) => {
-      try {
-        // @ts-ignore
-        return import.meta.env[`VITE_${key}`] || (process as any).env[key] || (process as any).env[`VITE_${key}`];
-      } catch (e) {
-        return null;
-      }
-    };
+    // Attempt to retrieve keys from Vite's import.meta.env (for production/GitHub Pages) 
+    // or from process.env (for local/AI Studio environment)
+    
+    // @ts-ignore
+    const vOpenaiKey = import.meta.env?.VITE_OPENAI_API_KEY;
+    // @ts-ignore
+    const vGeminiKey = import.meta.env?.VITE_GEMINI_API_KEY;
+    
+    const pOpenaiKey = (process as any).env?.OPENAI_API_KEY;
+    const pGeminiKey = (process as any).env?.GEMINI_API_KEY || (process as any).env?.API_KEY;
 
-    const openaiKey = getEnv("OPENAI_API_KEY");
-    const geminiKey = getEnv("API_KEY") || getEnv("GEMINI_API_KEY");
+    const openaiKey = vOpenaiKey || pOpenaiKey;
+    const geminiKey = vGeminiKey || pGeminiKey;
 
-    if (openaiKey) {
+    if (openaiKey && openaiKey !== "YOUR_OPENAI_API_KEY_HERE") {
       console.log("Neural Link: OpenAI Protocol Initialized");
       this.openaiAi = new OpenAI({ apiKey: openaiKey, dangerouslyAllowBrowser: true });
       this.currentProvider = "openai";
-    } else if (geminiKey) {
+    } else if (geminiKey && geminiKey !== "YOUR_GEMINI_API_KEY_HERE") {
       console.log("Neural Link: Gemini Protocol Initialized");
       this.geminiAi = new GoogleGenAI({ apiKey: geminiKey });
       this.currentProvider = "gemini";
     } else {
-      console.warn("Neural Link: No API Key detected. System in diagnostic mode.");
-      this.currentProvider = "gemini"; // Default, even if it fails
+      console.warn("Neural Link: No valid API Key detected. Please configure VITE_OPENAI_API_KEY or VITE_GEMINI_API_KEY.");
+      this.currentProvider = "gemini";
     }
   }
 

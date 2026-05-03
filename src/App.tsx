@@ -65,16 +65,13 @@ export default function App() {
   const [keyMissingError, setKeyMissingError] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if any key is available
-    const hasKey = !!(
-      (process as any).env?.GEMINI_API_KEY || 
-      (process as any).env?.OPENAI_API_KEY ||
-      // @ts-ignore
-      import.meta.env?.VITE_GEMINI_API_KEY ||
-      // @ts-ignore
-      import.meta.env?.VITE_OPENAI_API_KEY
-    );
-    if (!hasKey) {
+    // Robust detection for production build
+    const openaiKey = (import.meta as any).env.VITE_OPENAI_API_KEY || (process as any).env?.OPENAI_API_KEY;
+    const geminiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || (process as any).env?.GEMINI_API_KEY;
+    
+    const isValid = (key: any) => key && key !== "YOUR_OPENAI_API_KEY_HERE" && key !== "YOUR_GEMINI_API_KEY_HERE";
+
+    if (!isValid(openaiKey) && !isValid(geminiKey)) {
       console.error("Neural Link: API Keys missing in environment.");
       setKeyMissingError(true);
     }
@@ -252,10 +249,12 @@ export default function App() {
             <AlertTriangle size={14} className="animate-pulse" /> System Critical: API Failure
           </div>
           <p className="text-[10px] text-white/70 font-mono leading-relaxed">
-            Boss, API keys nahi mil rahe hain. GitHub par chalane ke liye: <br/>
-            1. <strong>Settings &gt; Secrets</strong> mein jaao. <br/>
-            2. <code>VITE_OPENAI_API_KEY</code> (OpenAI ke liye) add karo. <br/>
-            3. Page ko refresh karo.
+            Boss, API keys nahi mil rahe hain. OpenAI use karne ke liye GitHub par: <br/>
+            1. GitHub Repo mein <strong>Settings &gt; Secrets and variables &gt; Actions</strong> mein jaao. <br/>
+            2. <strong>New repository secret</strong> button dabao. <br/>
+            3. Name mein <code>VITE_OPENAI_API_KEY</code> likho. <br/>
+            4. Value mein apni key paste karo. <br/>
+            5. Uske baad <strong>Actions</strong> tab mein jaakar deploy workflow ko re-run karo.
           </p>
           <button 
             onClick={() => setKeyMissingError(false)}

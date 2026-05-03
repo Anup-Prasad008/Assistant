@@ -8,10 +8,9 @@ export default defineConfig(({mode}) => {
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.OPENAI_API_KEY': JSON.stringify(env.OPENAI_API_KEY),
+      'process.env': {} // Define empty process.env to prevent ReferenceError in browser
     },
-    base: '/Assistant/', // Set for GitHub Pages with repo name 'Assistant'
+    base: './', // Using relative paths is safer for GitHub Pages deployment
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
