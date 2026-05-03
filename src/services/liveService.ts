@@ -29,17 +29,30 @@ export class LiveSessionManager {
   }
 
   private refreshProvider() {
-    const openaiKey = (process as any).env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
-    const geminiKey = (process as any).env.API_KEY || process.env.GEMINI_API_KEY;
+    // Try to get keys from various sources safely
+    const getEnv = (key: string) => {
+      try {
+        // @ts-ignore
+        return import.meta.env[`VITE_${key}`] || (process as any).env[key] || (process as any).env[`VITE_${key}`];
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const openaiKey = getEnv("OPENAI_API_KEY");
+    const geminiKey = getEnv("API_KEY") || getEnv("GEMINI_API_KEY");
 
     if (openaiKey) {
-      console.log("Using OpenAI provider");
+      console.log("Neural Link: OpenAI Protocol Initialized");
       this.openaiAi = new OpenAI({ apiKey: openaiKey, dangerouslyAllowBrowser: true });
       this.currentProvider = "openai";
     } else if (geminiKey) {
-      console.log("Using Gemini provider");
+      console.log("Neural Link: Gemini Protocol Initialized");
       this.geminiAi = new GoogleGenAI({ apiKey: geminiKey });
       this.currentProvider = "gemini";
+    } else {
+      console.warn("Neural Link: No API Key detected. System in diagnostic mode.");
+      this.currentProvider = "gemini"; // Default, even if it fails
     }
   }
 

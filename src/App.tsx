@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Mic, MicOff, Loader2, Volume2, VolumeX, Keyboard, Send, Trash2 } from "lucide-react";
+import { Mic, MicOff, Loader2, Volume2, VolumeX, Keyboard, Send, Trash2, AlertTriangle } from "lucide-react";
 import { getBunnyResponse, getBunnyAudio, resetBunnySession } from "./services/geminiService";
 import { processCommand } from "./services/commandService";
 import { LiveSessionManager } from "./services/liveService";
@@ -62,6 +62,23 @@ export default function App() {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [currentThemeName] = useState<ThemeName>("blood");
   const [mobileActiveView, setMobileActiveView] = useState<"stats" | "core" | "chat">("core");
+  const [keyMissingError, setKeyMissingError] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Check if any key is available
+    const hasKey = !!(
+      (process as any).env?.GEMINI_API_KEY || 
+      (process as any).env?.OPENAI_API_KEY ||
+      // @ts-ignore
+      import.meta.env?.VITE_GEMINI_API_KEY ||
+      // @ts-ignore
+      import.meta.env?.VITE_OPENAI_API_KEY
+    );
+    if (!hasKey) {
+      console.error("Neural Link: API Keys missing in environment.");
+      setKeyMissingError(true);
+    }
+  }, []);
 
   const theme = THEMES[currentThemeName];
 
@@ -227,6 +244,27 @@ export default function App() {
         {/* Global HUD Scanning Effect */}
         <div className="absolute top-0 left-0 w-full scan-line pointer-events-none opacity-10 z-10" />
       </div>
+
+      {/* KEY MISSING WARNING */}
+      {keyMissingError && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-md bg-red-500/20 border border-red-500/50 backdrop-blur-3xl p-4 rounded-xl text-center shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+          <div className="text-red-400 font-mono text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
+            <AlertTriangle size={14} className="animate-pulse" /> System Critical: API Failure
+          </div>
+          <p className="text-[10px] text-white/70 font-mono leading-relaxed">
+            Boss, API keys nahi mil rahe hain. GitHub par chalane ke liye: <br/>
+            1. <strong>Settings &gt; Secrets</strong> mein jaao. <br/>
+            2. <code>VITE_OPENAI_API_KEY</code> (OpenAI ke liye) add karo. <br/>
+            3. Page ko refresh karo.
+          </p>
+          <button 
+            onClick={() => setKeyMissingError(false)}
+            className="mt-3 px-4 py-1 border border-white/20 rounded-full text-[9px] font-mono text-white/50 hover:bg-white/5 transition-colors"
+          >
+            DISMISS
+          </button>
+        </div>
+      )}
 
       {/* HUD TOP BAR */}
       <header className="relative w-full h-14 md:h-16 border-b border-white/5 flex justify-between items-center px-4 md:px-6 z-50 bg-black/40 backdrop-blur-md">
